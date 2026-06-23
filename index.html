@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDPA Compliance Checker</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #1a1a1a; min-height: 100vh; padding: 2rem 1rem; }
+  .container { max-width: 700px; margin: 0 auto; }
+  .header { margin-bottom: 2rem; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 99px; background: #e6f1fb; color: #0c447c; margin-bottom: 12px; letter-spacing: 0.03em; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+  .subtitle { font-size: 14px; color: #666; }
+  .card { background: #fff; border-radius: 12px; border: 1px solid #e5e5e5; padding: 1.5rem; margin-bottom: 1rem; }
+  .tabs { display: flex; gap: 0; margin-bottom: 1.25rem; border: 1px solid #e5e5e5; border-radius: 8px; overflow: hidden; }
+  .tab { flex: 1; font-size: 13px; padding: 9px; border: none; background: none; cursor: pointer; color: #666; font-family: inherit; transition: all 0.15s; }
+  .tab.active { background: #1a1a1a; color: #fff; font-weight: 500; }
+  .input-label { font-size: 13px; font-weight: 500; color: #444; margin-bottom: 8px; display: block; }
+  .examples { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; align-items: center; }
+  .examples span { font-size: 12px; color: #999; }
+  .ex-btn { font-size: 12px; padding: 4px 10px; border: 1px solid #e0e0e0; border-radius: 6px; background: #f9f9f9; color: #555; cursor: pointer; font-family: inherit; }
+  .ex-btn:hover { background: #f0f0f0; }
+  textarea { width: 100%; min-height: 180px; resize: vertical; font-size: 14px; font-family: inherit; padding: 12px; border: 1px solid #e0e0e0; border-radius: 8px; background: #fafafa; color: #1a1a1a; line-height: 1.6; outline: none; }
+  textarea:focus { border-color: #aaa; background: #fff; }
+  .analyse-btn { width: 100%; padding: 11px; font-size: 14px; font-weight: 600; border-radius: 8px; border: none; background: #1a1a1a; color: #fff; cursor: pointer; font-family: inherit; margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.15s; }
+  .analyse-btn:hover { opacity: 0.85; }
+  .analyse-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .progress-wrap { display: none; margin-top: 1rem; }
+  .progress-track { height: 4px; background: #eee; border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; width: 0%; background: #1a1a1a; border-radius: 99px; transition: width 0.5s ease; }
+  .progress-label { font-size: 12px; color: #888; margin-top: 6px; }
+  .error-box { display: none; margin-top: 10px; padding: 10px 14px; background: #fff0f0; border-radius: 8px; font-size: 13px; color: #b00; border: 1px solid #f5c0c0; }
+  .results { display: none; margin-top: 1.5rem; }
+  .score-row { display: flex; align-items: center; gap: 1.5rem; padding: 1.25rem; background: #f9f9f9; border-radius: 10px; margin-bottom: 1rem; border: 1px solid #eee; }
+  .score-ring { width: 76px; height: 76px; flex-shrink: 0; }
+  .score-ring svg { width: 100%; height: 100%; }
+  .score-info h2 { font-size: 18px; font-weight: 600; margin-bottom: 3px; }
+  .score-info p { font-size: 13px; color: #888; }
+  .sections-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 1.25rem; }
+  .sec-card { padding: 10px 12px; border: 1px solid #eee; border-radius: 8px; background: #fff; }
+  .sec-name { font-size: 11px; color: #888; margin-bottom: 5px; display: flex; align-items: center; gap: 4px; }
+  .sec-note { font-size: 12px; font-weight: 500; }
+  .pass { color: #2d6a0f; } .warn { color: #7a4800; } .fail { color: #8b1c1c; }
+  .dot-pass::before { content: '●'; color: #5a9e2f; margin-right: 3px; }
+  .dot-warn::before { content: '●'; color: #d4860a; margin-right: 3px; }
+  .dot-fail::before { content: '●'; color: #cc3333; margin-right: 3px; }
+  .section-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; color: #333; }
+  .finding { padding: 12px 14px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid; }
+  .finding.critical { background: #fff5f5; border-color: #e24b4a; }
+  .finding.warning { background: #fffbf0; border-color: #d4860a; }
+  .finding.pass { background: #f3fbea; border-color: #5a9e2f; }
+  .f-title { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+  .finding.critical .f-title { color: #7a1515; }
+  .finding.warning .f-title { color: #6b3c00; }
+  .finding.pass .f-title { color: #2d5a0f; }
+  .f-desc { font-size: 12px; line-height: 1.6; }
+  .finding.critical .f-desc { color: #9b2020; }
+  .finding.warning .f-desc { color: #7a4800; }
+  .finding.pass .f-desc { color: #3a7a18; }
+  .reco { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+  .reco:last-child { border-bottom: none; }
+  .reco-num { font-size: 12px; font-weight: 600; color: #bbb; min-width: 22px; padding-top: 1px; }
+  .reco-text { font-size: 13px; color: #333; line-height: 1.6; }
+  .disclaimer { margin-top: 1rem; padding: 10px 14px; background: #f9f9f9; border-radius: 8px; font-size: 11px; color: #999; line-height: 1.6; border: 1px solid #eee; }
+  .disclaimer strong { color: #777; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="badge">🛡 Malaysia PDPA 2010</div>
+    <h1>Privacy policy checker</h1>
+    <p class="subtitle">Paste your privacy policy or data collection form and get an AI-powered PDPA compliance audit.</p>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('policy', this)">Privacy policy</button>
+      <button class="tab" onclick="switchTab('form', this)">Data collection form</button>
+    </div>
+
+    <label class="input-label" id="input-label">Paste your privacy policy text here</label>
+    <div class="examples">
+      <span>Try an example:</span>
+      <button class="ex-btn" onclick="loadExample('minimal')">Minimal policy</button>
+      <button class="ex-btn" onclick="loadExample('ecommerce')">E-commerce policy</button>
+      <button class="ex-btn" onclick="loadExample('form')">Sign-up form</button>
+    </div>
+    <textarea id="policy-input" placeholder="e.g. We collect your name, email address and phone number to process your order..."></textarea>
+
+    <button class="analyse-btn" id="analyse-btn" onclick="runAnalysis()">
+      ✦ Analyse for PDPA compliance
+    </button>
+
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      <p class="progress-label" id="progress-label">Checking PDPA principles...</p>
+    </div>
+    <div class="error-box" id="error-box"></div>
+  </div>
+
+  <div class="results" id="results">
+    <div class="card">
+      <div class="score-row">
+        <div class="score-ring">
+          <svg viewBox="0 0 76 76">
+            <circle cx="38" cy="38" r="32" fill="none" stroke="#eee" stroke-width="7"/>
+            <circle id="score-arc" cx="38" cy="38" r="32" fill="none" stroke="#1a1a1a" stroke-width="7"
+              stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="201"
+              transform="rotate(-90 38 38)" style="transition: stroke-dashoffset 0.8s ease, stroke 0.4s"/>
+            <text id="score-num" x="38" y="43" text-anchor="middle" font-size="15" font-weight="700" fill="#1a1a1a">-</text>
+          </svg>
+        </div>
+        <div class="score-info">
+          <h2 id="score-label">—</h2>
+          <p>Based on 7 PDPA 2010 principles</p>
+        </div>
+      </div>
+
+      <div class="section-title">Principle breakdown</div>
+      <div class="sections-grid" id="sections-grid"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Findings</div>
+      <div id="findings-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Recommendations</div>
+      <div id="reco-list"></div>
+      <div class="disclaimer"><strong>Disclaimer:</strong> This is an educational assessment based on Malaysia's Personal Data Protection Act 2010 and is not legal advice. Consult a qualified legal professional for official compliance review.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const EXAMPLES = {
+  minimal: `Privacy Policy\n\nWe collect your personal information when you use our services. This includes your name and email address. We use this information to provide our services to you. We may share your information with partners. If you have questions, contact us at info@company.com.`,
+  ecommerce: `Privacy Policy - ShopMY Sdn Bhd\n\nWe collect your name, email, phone number, delivery address, and payment details to process orders. Your data is stored securely on our servers in Malaysia. We will not sell your personal data to third parties. We may use your email to send you promotional offers — you can unsubscribe at any time. You have the right to access and correct your personal data by contacting us. We retain your data for 7 years as required by law. This policy was last updated on 1 January 2024.`,
+  form: `Sign Up Form\n\nFull Name: ___________\nIC Number: ___________\nDate of Birth: ___________\nEmail Address: ___________\nPhone Number: ___________\nMonthly Income: ___________\nRace: ___________\nReligion: ___________\n\nBy signing up, you agree to receive marketing emails from us and our partners.`
+};
+
+let currentTab = 'policy';
+
+function switchTab(tab, el) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('input-label').textContent = tab === 'policy' ? 'Paste your privacy policy text here' : 'Paste your data collection form fields here';
+}
+
+function loadExample(key) {
+  document.getElementById('policy-input').value = EXAMPLES[key];
+  if (key === 'form') switchTab('form', document.querySelectorAll('.tab')[1]);
+  else switchTab('policy', document.querySelectorAll('.tab')[0]);
+}
+
+async function runAnalysis() {
+  const text = document.getElementById('policy-input').value.trim();
+  if (!text || text.length < 20) { showError('Please paste some text to analyse.'); return; }
+
+  const btn = document.getElementById('analyse-btn');
+  const pw = document.getElementById('progress-wrap');
+  const fill = document.getElementById('progress-fill');
+  const plabel = document.getElementById('progress-label');
+  const results = document.getElementById('results');
+  const errBox = document.getElementById('error-box');
+
+  btn.disabled = true;
+  pw.style.display = 'block';
+  results.style.display = 'none';
+  errBox.style.display = 'none';
+
+  const steps = [
+    [20, 'Checking data collection principles...'],
+    [45, 'Analysing consent and notice clauses...'],
+    [70, 'Reviewing data subject rights...'],
+    [90, 'Generating compliance report...'],
+  ];
+  let si = 0;
+  const ticker = setInterval(() => {
+    if (si < steps.length) { fill.style.width = steps[si][0] + '%'; plabel.textContent = steps[si][1]; si++; }
+  }, 900);
+
+  try {
+    const res = await fetch('/analyse', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, tab: currentTab })
+    });
+    clearInterval(ticker);
+    fill.style.width = '100%';
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || `Server error (${res.status})`);
+    }
+    const data = await res.json();
+    setTimeout(() => { pw.style.display = 'none'; btn.disabled = false; renderResults(data); }, 400);
+  } catch (e) {
+    clearInterval(ticker);
+    pw.style.display = 'none';
+    btn.disabled = false;
+    showError(e.message || 'Analysis failed. Make sure the server is running.');
+  }
+}
+
+function renderResults(data) {
+  const score = data.score || 0;
+  const offset = 201 - (201 * score / 100);
+  const arc = document.getElementById('score-arc');
+  arc.style.strokeDashoffset = offset;
+  arc.style.stroke = score >= 75 ? '#2d6a0f' : score >= 50 ? '#d4860a' : '#cc3333';
+  document.getElementById('score-num').textContent = score + '%';
+  document.getElementById('score-label').textContent = data.scoreLabel || '';
+
+  document.getElementById('sections-grid').innerHTML = (data.sections || []).map(s => `
+    <div class="sec-card">
+      <div class="sec-name dot-${s.status === 'pass' ? 'pass' : s.status === 'warn' ? 'warn' : 'fail'}">${s.name}</div>
+      <div class="sec-note ${s.status === 'pass' ? 'pass' : s.status === 'warn' ? 'warn' : 'fail'}">${s.note}</div>
+    </div>`).join('');
+
+  document.getElementById('findings-list').innerHTML = (data.findings || []).map(f => `
+    <div class="finding ${f.type === 'critical' ? 'critical' : f.type === 'warning' ? 'warning' : 'pass'}">
+      <div class="f-title">${f.title}</div>
+      <div class="f-desc">${f.description}</div>
+    </div>`).join('');
+
+  document.getElementById('reco-list').innerHTML = (data.recommendations || []).map((r, i) => `
+    <div class="reco">
+      <div class="reco-num">${String(i + 1).padStart(2, '0')}</div>
+      <div class="reco-text">${r}</div>
+    </div>`).join('');
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-box');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+</script>
+</body>
+</html>
