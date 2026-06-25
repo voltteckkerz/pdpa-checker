@@ -15,6 +15,7 @@
     .main-grid > .card { width: 100%; }
   }
   .header { margin-bottom: 2rem; }
+  .icon { width: 14px; height: 14px; display: inline-block; vertical-align: -2px; flex-shrink: 0; }
   .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 99px; background: #e6f1fb; color: #0c447c; margin-bottom: 12px; letter-spacing: 0.03em; }
   h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
   .subtitle { font-size: 14px; color: #666; }
@@ -23,6 +24,10 @@
   .tab { flex: 1; font-size: 13px; padding: 9px; border: none; background: none; cursor: pointer; color: #666; font-family: inherit; transition: all 0.15s; }
   .tab.active { background: #1a1a1a; color: #fff; font-weight: 500; }
   .input-label { font-size: 13px; font-weight: 500; color: #444; margin-bottom: 8px; display: block; }
+  .input-section { margin-bottom: 4px; }
+  .divider { display: flex; align-items: center; text-align: center; margin: 16px 0; color: #bbb; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; }
+  .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #eee; }
+  .divider span { padding: 0 12px; }
   .examples { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; align-items: center; }
   .examples span { font-size: 12px; color: #999; }
   .ex-btn { font-size: 12px; padding: 4px 10px; border: 1px solid #e0e0e0; border-radius: 6px; background: #f9f9f9; color: #555; cursor: pointer; font-family: inherit; }
@@ -45,14 +50,26 @@
   .score-ring svg { width: 100%; height: 100%; }
   #score-num { transition: fill 0.3s; }
   #score-card.empty .score-info h2 { color: #bbb; }
-  .upload-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .upload-btn { font-size: 12px; padding: 4px 10px; border: 1px solid #e0e0e0; border-radius: 6px; background: #f9f9f9; color: #555; cursor: pointer; }
-  .upload-btn:hover { background: #f0f0f0; }
-  .upload-status { font-size: 12px; color: #888; }
-  .sections-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 1.25rem; }
-  .sec-card { padding: 10px 12px; border: 1px solid #eee; border-radius: 8px; background: #fff; }
-  .sec-name { font-size: 11px; color: #888; margin-bottom: 5px; display: flex; align-items: center; gap: 4px; }
-  .sec-note { font-size: 12px; font-weight: 500; }
+  #score-card { position: relative; }
+  .dropzone { display: flex; align-items: center; justify-content: center; text-align: center; gap: 8px; padding: 16px; margin-bottom: 10px; border: 2px dashed #d8d8d8; border-radius: 8px; background: #fafafa; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+  .dropzone:hover { border-color: #bbb; background: #f5f5f5; }
+  .dropzone.drag-over { border-color: #1a1a1a; background: #f0f0f0; }
+  .dropzone-text { font-size: 13px; color: #777; }
+  .dropzone-text strong { color: #1a1a1a; font-weight: 600; }
+  .upload-status { font-size: 12px; color: #888; margin-bottom: 10px; }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.25rem; }
+  .pill { font-size: 12px; font-weight: 500; padding: 7px 13px; border-radius: 99px; border: 1px solid; cursor: pointer; background: #fff; display: flex; align-items: center; gap: 5px; font-family: inherit; transition: background 0.15s, box-shadow 0.15s; }
+  .pill:hover { background: #fafafa; }
+  .pill.active { box-shadow: 0 0 0 2px rgba(26, 26, 26, 0.1); }
+  .pill-pass { border-color: #bfe3a0; color: #2d6a0f; }
+  .pill-warn { border-color: #f0cf8a; color: #7a4800; }
+  .pill-fail { border-color: #f0b3b3; color: #8b1c1c; }
+  .sec-popover { position: absolute; z-index: 20; max-width: 240px; background: #1a1a1a; color: #fff; padding: 10px 12px; border-radius: 8px; font-size: 12px; line-height: 1.6; font-weight: 500; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18); display: none; }
+  .sec-popover.open { display: block; }
+  .sec-popover::before { content: ''; position: absolute; top: -6px; left: 18px; border-width: 0 6px 6px 6px; border-style: solid; border-color: transparent transparent #1a1a1a transparent; }
+  .sec-popover-title { font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+  .sec-popover-close { margin-left: auto; cursor: pointer; opacity: 0.6; flex-shrink: 0; }
+  .sec-popover-close:hover { opacity: 1; }
   .pass { color: #2d6a0f; } .warn { color: #7a4800; } .fail { color: #8b1c1c; }
   .dot-pass::before { content: '●'; color: #5a9e2f; margin-right: 3px; }
   .dot-warn::before { content: '●'; color: #d4860a; margin-right: 3px; }
@@ -81,35 +98,42 @@
 <body>
 <div class="container">
   <div class="header">
-    <div class="badge">🛡 Malaysia PDPA 2010</div>
+    <div class="badge"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Malaysia PDPA 2010</div>
     <h1>Privacy policy checker</h1>
     <p class="subtitle">Paste your privacy policy or data collection form and get an AI-powered PDPA compliance audit.</p>
   </div>
 
   <div class="main-grid">
-    <div class="card">
+    <div class="card" id="input-card">
       <div class="tabs">
         <button class="tab active" onclick="switchTab('policy', this)">Privacy policy</button>
         <button class="tab" onclick="switchTab('form', this)">Data collection form</button>
       </div>
 
-      <label class="input-label" id="input-label">Paste your privacy policy text here</label>
-      <div class="examples">
-        <span>Try an example:</span>
-        <button class="ex-btn" onclick="loadExample('minimal')">Minimal policy</button>
-        <button class="ex-btn" onclick="loadExample('ecommerce')">E-commerce policy</button>
-        <button class="ex-btn" onclick="loadExample('form')">Sign-up form</button>
+      <div class="input-section">
+        <label class="input-label" id="input-label">1. Paste your privacy policy text here</label>
+        <div class="examples">
+          <span>Try an example:</span>
+          <button class="ex-btn" onclick="loadExample('minimal')">Minimal policy</button>
+          <button class="ex-btn" onclick="loadExample('ecommerce')">E-commerce policy</button>
+          <button class="ex-btn" onclick="loadExample('form')">Sign-up form</button>
+        </div>
+        <textarea id="policy-input" placeholder="e.g. We collect your name, email address and phone number to process your order..."></textarea>
       </div>
-      <textarea id="policy-input" placeholder="e.g. We collect your name, email address and phone number to process your order..."></textarea>
 
-      <div class="upload-row">
-        <label class="upload-btn" for="pdf-input">📄 Upload PDF instead</label>
-        <input type="file" id="pdf-input" accept="application/pdf" style="display:none" onchange="handlePdfUpload(event)">
-        <span class="upload-status" id="upload-status"></span>
+      <div class="divider"><span>OR</span></div>
+
+      <div class="input-section">
+        <label class="input-label">2. Drag &amp; drop a PDF</label>
+        <div class="dropzone" id="dropzone">
+          <input type="file" id="pdf-input" accept="application/pdf" style="display:none" onchange="handlePdfUpload(event)">
+          <div class="dropzone-text"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg> Drag &amp; drop a PDF here, or <strong>click to browse</strong></div>
+        </div>
+        <div class="upload-status" id="upload-status"></div>
       </div>
 
       <button class="analyse-btn" id="analyse-btn" onclick="runAnalysis()">
-        ✦ Analyse for PDPA compliance
+        <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2 7 7 2-7 2-2 7-2-7-7-2 7-2z"/></svg> Analyse for PDPA compliance
       </button>
 
       <div class="progress-wrap" id="progress-wrap">
@@ -137,21 +161,26 @@
       </div>
 
       <div class="section-title">Principle breakdown</div>
-      <div class="sections-grid" id="sections-grid"></div>
+      <p style="font-size: 11px; color: #aaa; margin-top: -6px; margin-bottom: 10px;">Click a principle to see details</p>
+      <div class="pill-row" id="sections-grid"></div>
+      <div class="sec-popover" id="sec-popover"></div>
     </div>
   </div>
 
   <div class="results" id="results">
-    <div class="card">
-      <div class="section-title">Findings</div>
-      <div id="findings-list"></div>
+    <div class="main-grid">
+      <div class="card">
+        <div class="section-title">Findings</div>
+        <div id="findings-list"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Recommendations</div>
+        <div id="reco-list"></div>
+      </div>
     </div>
 
-    <div class="card">
-      <div class="section-title">Recommendations</div>
-      <div id="reco-list"></div>
-      <div class="disclaimer"><strong>Disclaimer:</strong> This is an educational assessment based on Malaysia's Personal Data Protection Act 2010 and is not legal advice. Consult a qualified legal professional for official compliance review.</div>
-    </div>
+    <div class="disclaimer" style="margin-top: 1.5rem;"><strong>Disclaimer:</strong> This is an educational assessment based on Malaysia's Personal Data Protection Act 2010 and is not legal advice. Consult a qualified legal professional for official compliance review.</div>
   </div>
 </div>
 
@@ -168,7 +197,7 @@ function switchTab(tab, el) {
   currentTab = tab;
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('input-label').textContent = tab === 'policy' ? 'Paste your privacy policy text here' : 'Paste your data collection form fields here';
+  document.getElementById('input-label').textContent = tab === 'policy' ? '1. Paste your privacy policy text here' : '1. Paste your data collection form fields here';
 }
 
 function loadExample(key) {
@@ -177,9 +206,13 @@ function loadExample(key) {
   else switchTab('policy', document.querySelectorAll('.tab')[0]);
 }
 
-async function handlePdfUpload(event) {
-  const file = event.target.files[0];
+async function uploadPdfFile(file) {
   if (!file) return;
+
+  if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+    showError('Please upload a PDF file.');
+    return;
+  }
 
   const status = document.getElementById('upload-status');
   const errBox = document.getElementById('error-box');
@@ -201,10 +234,82 @@ async function handlePdfUpload(event) {
   } catch (e) {
     status.textContent = '';
     showError(e.message || 'Could not read PDF file.');
-  } finally {
-    event.target.value = '';
   }
 }
+
+function handlePdfUpload(event) {
+  uploadPdfFile(event.target.files[0]);
+  event.target.value = '';
+}
+
+const dropZone = document.getElementById('dropzone');
+dropZone.addEventListener('click', () => document.getElementById('pdf-input').click());
+['dragenter', 'dragover'].forEach(evt => dropZone.addEventListener(evt, e => {
+  e.preventDefault();
+  dropZone.classList.add('drag-over');
+}));
+['dragleave', 'drop'].forEach(evt => dropZone.addEventListener(evt, e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+}));
+dropZone.addEventListener('drop', e => {
+  uploadPdfFile(e.dataTransfer.files[0]);
+});
+
+let lastSections = [];
+
+function showSecPopover(i, btnEl) {
+  const pop = document.getElementById('sec-popover');
+  const card = document.getElementById('score-card');
+
+  if (pop.dataset.openFor === String(i)) {
+    closeSecPopover();
+    return;
+  }
+
+  const s = lastSections[i];
+  pop.innerHTML = '';
+  const title = document.createElement('div');
+  title.className = 'sec-popover-title';
+  const nameSpan = document.createElement('span');
+  nameSpan.textContent = s.name;
+  const closeBtn = document.createElement('span');
+  closeBtn.className = 'sec-popover-close';
+  closeBtn.innerHTML = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  closeBtn.addEventListener('click', closeSecPopover);
+  title.appendChild(nameSpan);
+  title.appendChild(closeBtn);
+  const noteDiv = document.createElement('div');
+  noteDiv.textContent = s.note;
+  pop.appendChild(title);
+  pop.appendChild(noteDiv);
+
+  const cardRect = card.getBoundingClientRect();
+  const btnRect = btnEl.getBoundingClientRect();
+  let left = btnRect.left - cardRect.left;
+  const maxLeft = cardRect.width - 240 - 8;
+  if (left > maxLeft) left = Math.max(8, maxLeft);
+  pop.style.left = left + 'px';
+  pop.style.top = (btnRect.bottom - cardRect.top + 10) + 'px';
+  pop.classList.add('open');
+  pop.dataset.openFor = String(i);
+
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  btnEl.classList.add('active');
+}
+
+function closeSecPopover() {
+  const pop = document.getElementById('sec-popover');
+  pop.classList.remove('open');
+  pop.dataset.openFor = '';
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.pill') && !e.target.closest('.sec-popover')) {
+    closeSecPopover();
+  }
+});
 
 async function runAnalysis() {
   const text = document.getElementById('policy-input').value.trim();
@@ -270,23 +375,52 @@ function renderResults(data) {
   numEl.style.fill = color;
   document.getElementById('score-label').textContent = data.scoreLabel || '';
 
-  document.getElementById('sections-grid').innerHTML = (data.sections || []).map(s => `
-    <div class="sec-card">
-      <div class="sec-name dot-${s.status === 'pass' ? 'pass' : s.status === 'warn' ? 'warn' : 'fail'}">${s.name}</div>
-      <div class="sec-note ${s.status === 'pass' ? 'pass' : s.status === 'warn' ? 'warn' : 'fail'}">${s.note}</div>
-    </div>`).join('');
+  closeSecPopover();
+  lastSections = data.sections || [];
+  const grid = document.getElementById('sections-grid');
+  grid.innerHTML = '';
+  lastSections.forEach((s, i) => {
+    const cls = s.status === 'pass' ? 'pass' : s.status === 'warn' ? 'warn' : 'fail';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `pill pill-${cls} dot-${cls}`;
+    btn.textContent = s.name;
+    btn.addEventListener('click', () => showSecPopover(i, btn));
+    grid.appendChild(btn);
+  });
 
-  document.getElementById('findings-list').innerHTML = (data.findings || []).map(f => `
-    <div class="finding ${f.type === 'critical' ? 'critical' : f.type === 'warning' ? 'warning' : 'pass'}">
-      <div class="f-title">${f.title}</div>
-      <div class="f-desc">${f.description}</div>
-    </div>`).join('');
+  const findingsList = document.getElementById('findings-list');
+  findingsList.innerHTML = '';
+  (data.findings || []).forEach(f => {
+    const cls = f.type === 'critical' ? 'critical' : f.type === 'warning' ? 'warning' : 'pass';
+    const div = document.createElement('div');
+    div.className = `finding ${cls}`;
+    const title = document.createElement('div');
+    title.className = 'f-title';
+    title.textContent = f.title;
+    const desc = document.createElement('div');
+    desc.className = 'f-desc';
+    desc.textContent = f.description;
+    div.appendChild(title);
+    div.appendChild(desc);
+    findingsList.appendChild(div);
+  });
 
-  document.getElementById('reco-list').innerHTML = (data.recommendations || []).map((r, i) => `
-    <div class="reco">
-      <div class="reco-num">${String(i + 1).padStart(2, '0')}</div>
-      <div class="reco-text">${r}</div>
-    </div>`).join('');
+  const recoList = document.getElementById('reco-list');
+  recoList.innerHTML = '';
+  (data.recommendations || []).forEach((r, i) => {
+    const div = document.createElement('div');
+    div.className = 'reco';
+    const num = document.createElement('div');
+    num.className = 'reco-num';
+    num.textContent = String(i + 1).padStart(2, '0');
+    const text = document.createElement('div');
+    text.className = 'reco-text';
+    text.textContent = r;
+    div.appendChild(num);
+    div.appendChild(text);
+    recoList.appendChild(div);
+  });
 
   document.getElementById('results').style.display = 'block';
   document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
