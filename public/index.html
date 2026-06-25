@@ -7,7 +7,13 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #1a1a1a; min-height: 100vh; padding: 2rem 1rem; }
-  .container { max-width: 700px; margin: 0 auto; }
+  .container { max-width: 1100px; margin: 0 auto; }
+  .main-grid { display: flex; gap: 1.5rem; align-items: flex-start; }
+  .main-grid > .card { flex: 1; min-width: 0; margin-bottom: 0; }
+  @media (max-width: 760px) {
+    .main-grid { flex-direction: column; }
+    .main-grid > .card { width: 100%; }
+  }
   .header { margin-bottom: 2rem; }
   .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 99px; background: #e6f1fb; color: #0c447c; margin-bottom: 12px; letter-spacing: 0.03em; }
   h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
@@ -32,11 +38,17 @@
   .progress-label { font-size: 12px; color: #888; margin-top: 6px; }
   .error-box { display: none; margin-top: 10px; padding: 10px 14px; background: #fff0f0; border-radius: 8px; font-size: 13px; color: #b00; border: 1px solid #f5c0c0; }
   .results { display: none; margin-top: 1.5rem; }
-  .score-row { display: flex; align-items: center; gap: 1.5rem; padding: 1.25rem; background: #f9f9f9; border-radius: 10px; margin-bottom: 1rem; border: 1px solid #eee; }
-  .score-ring { width: 76px; height: 76px; flex-shrink: 0; }
-  .score-ring svg { width: 100%; height: 100%; }
-  .score-info h2 { font-size: 18px; font-weight: 600; margin-bottom: 3px; }
+  .score-row { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding: 1.25rem; background: #f9f9f9; border-radius: 10px; margin-bottom: 1rem; border: 1px solid #eee; }
+  .score-info h2 { font-size: 18px; font-weight: 600; margin-bottom: 3px; transition: color 0.3s; }
   .score-info p { font-size: 13px; color: #888; }
+  .score-ring { width: 120px; height: 120px; flex-shrink: 0; }
+  .score-ring svg { width: 100%; height: 100%; }
+  #score-num { transition: fill 0.3s; }
+  #score-card.empty .score-info h2 { color: #bbb; }
+  .upload-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .upload-btn { font-size: 12px; padding: 4px 10px; border: 1px solid #e0e0e0; border-radius: 6px; background: #f9f9f9; color: #555; cursor: pointer; }
+  .upload-btn:hover { background: #f0f0f0; }
+  .upload-status { font-size: 12px; color: #888; }
   .sections-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 1.25rem; }
   .sec-card { padding: 10px 12px; border: 1px solid #eee; border-radius: 8px; background: #fff; }
   .sec-name { font-size: 11px; color: #888; margin-bottom: 5px; display: flex; align-items: center; gap: 4px; }
@@ -74,54 +86,62 @@
     <p class="subtitle">Paste your privacy policy or data collection form and get an AI-powered PDPA compliance audit.</p>
   </div>
 
-  <div class="card">
-    <div class="tabs">
-      <button class="tab active" onclick="switchTab('policy', this)">Privacy policy</button>
-      <button class="tab" onclick="switchTab('form', this)">Data collection form</button>
-    </div>
-
-    <label class="input-label" id="input-label">Paste your privacy policy text here</label>
-    <div class="examples">
-      <span>Try an example:</span>
-      <button class="ex-btn" onclick="loadExample('minimal')">Minimal policy</button>
-      <button class="ex-btn" onclick="loadExample('ecommerce')">E-commerce policy</button>
-      <button class="ex-btn" onclick="loadExample('form')">Sign-up form</button>
-    </div>
-    <textarea id="policy-input" placeholder="e.g. We collect your name, email address and phone number to process your order..."></textarea>
-
-    <button class="analyse-btn" id="analyse-btn" onclick="runAnalysis()">
-      ✦ Analyse for PDPA compliance
-    </button>
-
-    <div class="progress-wrap" id="progress-wrap">
-      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
-      <p class="progress-label" id="progress-label">Checking PDPA principles...</p>
-    </div>
-    <div class="error-box" id="error-box"></div>
-  </div>
-
-  <div class="results" id="results">
+  <div class="main-grid">
     <div class="card">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('policy', this)">Privacy policy</button>
+        <button class="tab" onclick="switchTab('form', this)">Data collection form</button>
+      </div>
+
+      <label class="input-label" id="input-label">Paste your privacy policy text here</label>
+      <div class="examples">
+        <span>Try an example:</span>
+        <button class="ex-btn" onclick="loadExample('minimal')">Minimal policy</button>
+        <button class="ex-btn" onclick="loadExample('ecommerce')">E-commerce policy</button>
+        <button class="ex-btn" onclick="loadExample('form')">Sign-up form</button>
+      </div>
+      <textarea id="policy-input" placeholder="e.g. We collect your name, email address and phone number to process your order..."></textarea>
+
+      <div class="upload-row">
+        <label class="upload-btn" for="pdf-input">📄 Upload PDF instead</label>
+        <input type="file" id="pdf-input" accept="application/pdf" style="display:none" onchange="handlePdfUpload(event)">
+        <span class="upload-status" id="upload-status"></span>
+      </div>
+
+      <button class="analyse-btn" id="analyse-btn" onclick="runAnalysis()">
+        ✦ Analyse for PDPA compliance
+      </button>
+
+      <div class="progress-wrap" id="progress-wrap">
+        <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+        <p class="progress-label" id="progress-label">Checking PDPA principles...</p>
+      </div>
+      <div class="error-box" id="error-box"></div>
+    </div>
+
+    <div class="card empty" id="score-card">
       <div class="score-row">
-        <div class="score-ring">
-          <svg viewBox="0 0 76 76">
-            <circle cx="38" cy="38" r="32" fill="none" stroke="#eee" stroke-width="7"/>
-            <circle id="score-arc" cx="38" cy="38" r="32" fill="none" stroke="#1a1a1a" stroke-width="7"
-              stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="201"
-              transform="rotate(-90 38 38)" style="transition: stroke-dashoffset 0.8s ease, stroke 0.4s"/>
-            <text id="score-num" x="38" y="43" text-anchor="middle" font-size="15" font-weight="700" fill="#1a1a1a">-</text>
-          </svg>
-        </div>
         <div class="score-info">
-          <h2 id="score-label">—</h2>
+          <h2 id="score-label">No analysis yet</h2>
           <p>Based on 7 PDPA 2010 principles</p>
+        </div>
+        <div class="score-ring">
+          <svg viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="50" fill="none" stroke="#eee" stroke-width="10"/>
+            <circle id="score-arc" cx="60" cy="60" r="50" fill="none" stroke="#1a1a1a" stroke-width="10"
+              stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="314"
+              transform="rotate(-90 60 60)" style="transition: stroke-dashoffset 0.8s ease, stroke 0.4s"/>
+            <text id="score-num" x="60" y="68" text-anchor="middle" font-size="26" font-weight="800" fill="#ccc">–</text>
+          </svg>
         </div>
       </div>
 
       <div class="section-title">Principle breakdown</div>
       <div class="sections-grid" id="sections-grid"></div>
     </div>
+  </div>
 
+  <div class="results" id="results">
     <div class="card">
       <div class="section-title">Findings</div>
       <div id="findings-list"></div>
@@ -155,6 +175,35 @@ function loadExample(key) {
   document.getElementById('policy-input').value = EXAMPLES[key];
   if (key === 'form') switchTab('form', document.querySelectorAll('.tab')[1]);
   else switchTab('policy', document.querySelectorAll('.tab')[0]);
+}
+
+async function handlePdfUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const status = document.getElementById('upload-status');
+  const errBox = document.getElementById('error-box');
+  errBox.style.display = 'none';
+  status.textContent = `Extracting text from "${file.name}"...`;
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res = await fetch('/extract-pdf', { method: 'POST', body: formData });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || `Server error (${res.status})`);
+    }
+    const data = await res.json();
+    document.getElementById('policy-input').value = data.text;
+    status.textContent = `Loaded "${file.name}" — review the text below, then analyse.`;
+  } catch (e) {
+    status.textContent = '';
+    showError(e.message || 'Could not read PDF file.');
+  } finally {
+    event.target.value = '';
+  }
 }
 
 async function runAnalysis() {
@@ -208,11 +257,17 @@ async function runAnalysis() {
 
 function renderResults(data) {
   const score = data.score || 0;
-  const offset = 201 - (201 * score / 100);
+  const color = score >= 75 ? '#2d6a0f' : score >= 50 ? '#d4860a' : '#cc3333';
+  const circumference = 314;
+  const offset = circumference - (circumference * score / 100);
+
+  document.getElementById('score-card').classList.remove('empty');
   const arc = document.getElementById('score-arc');
   arc.style.strokeDashoffset = offset;
-  arc.style.stroke = score >= 75 ? '#2d6a0f' : score >= 50 ? '#d4860a' : '#cc3333';
-  document.getElementById('score-num').textContent = score + '%';
+  arc.style.stroke = color;
+  const numEl = document.getElementById('score-num');
+  numEl.textContent = score + '%';
+  numEl.style.fill = color;
   document.getElementById('score-label').textContent = data.scoreLabel || '';
 
   document.getElementById('sections-grid').innerHTML = (data.sections || []).map(s => `

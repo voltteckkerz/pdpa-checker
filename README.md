@@ -1,42 +1,33 @@
 # PDPA Compliance Checker
 
-A small web app that analyses privacy policies and data collection forms against Malaysia's Personal Data Protection Act 2010 (PDPA), using Claude.
+A small web app that analyses privacy policies and data collection forms against Malaysia's Personal Data Protection Act 2010 (PDPA), using Gemini.
 
-Paste in a privacy policy or data collection form and get back a compliance score, a breakdown by PDPA principle (notice & choice, disclosure, security, retention, data integrity, access rights), specific findings, and actionable recommendations.
+Paste in a privacy policy or data collection form (or upload it as a PDF) and get back a compliance score, a breakdown by PDPA principle (notice & choice, disclosure, security, retention, data integrity, access rights), specific findings, and actionable recommendations.
 
 ## Stack
 
-- **Backend:** FastAPI + the [Anthropic Python SDK](https://github.com/anthropics/anthropic-sdk-python)
-- **Frontend:** single static `index.html` (no build step)
+- **Backend:** Laravel, calling the Gemini API directly over HTTP
+- **PDF text extraction:** [smalot/pdfparser](https://github.com/smalot/pdfparser)
+- **Frontend:** single static `public/index.html` (no build step)
 
 ## Setup
 
 ```bash
-pip install -r requirements.txt
+composer install
+cp .env.example .env
+php artisan key:generate
 ```
 
-Set your API key (get one at [console.anthropic.com](https://console.anthropic.com/settings/keys)):
+Set your Gemini API key (get a free one at [aistudio.google.com/apikey](https://aistudio.google.com/apikey)) in `.env`:
 
-```bash
-export ANTHROPIC_API_KEY="sk-ant-..."
 ```
-
-On Windows (PowerShell):
-
-```powershell
-$env:ANTHROPIC_API_KEY = "sk-ant-..."
+GEMINI_API_KEY=...
 ```
 
 ## Run
 
 ```bash
-./run.sh
-```
-
-or directly:
-
-```bash
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+php artisan serve --host=0.0.0.0 --port=8000
 ```
 
 Then open http://localhost:8000.
@@ -45,13 +36,13 @@ Then open http://localhost:8000.
 
 ```bash
 docker build -t pdpa-checker .
-docker run -p 8000:8000 -e ANTHROPIC_API_KEY="sk-ant-..." pdpa-checker
+docker run -p 8000:8000 -e GEMINI_API_KEY="..." pdpa-checker
 ```
 
 ## Mock mode
 
-To try the app without an API key or API credits, run with `MOCK_MODE=true`. The `/analyse` endpoint will return a fixed, schema-correct sample result instead of calling the Anthropic API:
+To try the app without an API key, set `MOCK_MODE=true` in `.env` (or pass it as an env var). The `/analyse` endpoint will return a fixed, schema-correct sample result instead of calling the Gemini API:
 
 ```bash
-MOCK_MODE=true uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+MOCK_MODE=true php artisan serve --host=0.0.0.0 --port=8000
 ```
