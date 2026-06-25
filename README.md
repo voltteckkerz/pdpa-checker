@@ -2,13 +2,20 @@
 
 A small web app that analyses privacy policies and data collection forms against Malaysia's Personal Data Protection Act 2010 (PDPA), using Gemini.
 
-Paste in a privacy policy or data collection form (or upload it as a PDF) and get back a compliance score, a breakdown by PDPA principle (notice & choice, disclosure, security, retention, data integrity, access rights), specific findings, and actionable recommendations.
+Paste in a privacy policy or data collection form — or drag & drop it as a PDF — and get back a compliance score, a breakdown by PDPA principle (notice & choice, disclosure, security, retention, data integrity, access rights), specific findings, and actionable recommendations.
+
+## Features
+
+- Two input modes: paste text directly, or drag & drop (or click to browse) a PDF
+- AI-generated compliance score with a visual ring, plus a clickable "bubble" breakdown per PDPA principle — click a principle to see its detail in a floating popover
+- Findings and recommendations shown side by side, with a disclaimer footer
+- Mock mode for trying the app without burning API credits
 
 ## Stack
 
 - **Backend:** Laravel, calling the Gemini API directly over HTTP
 - **PDF text extraction:** [smalot/pdfparser](https://github.com/smalot/pdfparser)
-- **Frontend:** single static `public/index.html` (no build step)
+- **Frontend:** single static `public/index.html` (no build step, no JS framework)
 
 ## Setup
 
@@ -23,6 +30,8 @@ Set your Gemini API key (get a free one at [aistudio.google.com/apikey](https://
 ```
 GEMINI_API_KEY=...
 ```
+
+> **Windows + Laravel Herd users:** if `composer` isn't on your `PATH`, run it via `php "C:\Users\<you>\.config\herd-lite\bin\composer.phar"` instead.
 
 ## Run
 
